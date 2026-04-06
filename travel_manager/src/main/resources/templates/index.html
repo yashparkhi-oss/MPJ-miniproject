@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard - Travel Expense Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #05050a 0%, #0d1229 50%, #1a0b2e 100%);
+            background-attachment: fixed;
+            color: #f1f5f9;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .card {
+            background: rgba(20, 20, 35, 0.6);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
+            color: #f1f5f9;
+        }
+
+        .trip-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(138, 43, 226, 0.15) !important;
+            border-color: rgba(139, 92, 246, 0.5);
+        }
+
+        .ai-banner {
+            background: linear-gradient(135deg, rgba(30, 27, 75, 0.7), rgba(23, 37, 84, 0.7));
+            border-left: 6px solid #8b5cf6;
+        }
+
+        .trip-link {
+            color: #e2e8f0;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .trip-link:hover {
+            color: #8b5cf6;
+        }
+
+        .form-control,
+        .btn {
+            border-radius: 10px;
+        }
+
+        .form-control {
+            background-color: rgba(10, 10, 15, 0.6) !important;
+            border: 1px solid rgba(139, 92, 246, 0.3) !important;
+            color: #fff !important;
+        }
+
+        .form-control:focus {
+            background-color: rgba(15, 15, 25, 0.9) !important;
+            border-color: #8b5cf6 !important;
+            box-shadow: 0 0 0 0.25rem rgba(139, 92, 246, 0.25) !important;
+            color: #fff !important;
+        }
+
+        .form-control::placeholder {
+            color: #888 !important;
+        }
+
+        .form-floating label {
+            color: #94a3b8 !important;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4338ca, #8b5cf6);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #3730a3, #7c3aed);
+        }
+
+        .text-muted {
+            color: #94a3b8 !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container py-5">
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <div>
+                <h1 class="display-5 fw-bold mb-0">🌍 Travel Manager</h1>
+                <p class="text-muted mt-1 mb-0">Welcome back! Ready for your next journey?</p>
+            </div>
+            <div class="text-end">
+                <form th:action="@{/logout}" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-outline-danger px-4 rounded-pill fw-bold">Logout</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow-sm p-4 mb-5 ai-banner">
+            <div class="d-flex align-items-start">
+                <span class="fs-1 me-3">🤖</span>
+                <div>
+                    <h5 class="mb-2 fw-bold" style="color: #a78bfa;">Daily Travel Insight</h5>
+                    <p class="mb-0 fst-italic text-light" style="line-height: 1.6;" th:text="${aiGreeting}">
+                        Gathering the latest budget trends and hidden gems for you...
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="card shadow p-4 sticky-top" style="top: 20px;">
+                    <h4 class="fw-bold mb-4">✨ Plan a Trip</h4>
+                    <form th:action="@{/add-trip}" method="post">
+                        <div class="form-floating mb-3">
+                            <input class="form-control" id="tripName" name="name" placeholder="" required>
+                            <label for="tripName">Trip Name</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input class="form-control" id="tripBudget" name="budget" type="number" step="0.01"
+                                placeholder="" required>
+                            <label for="tripBudget">Total Budget (₹)</label>
+                        </div>
+                        <div class="form-floating mb-4">
+                            <input class="form-control" id="tripLocation" name="location" placeholder="" required>
+                            <label for="tripLocation">Location</label>
+                        </div>
+                        <button class="btn btn-primary w-100 fw-bold py-3 shadow-sm text-white">➕ Create
+                            Adventure</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <h4 class="fw-bold mb-4">📂 Your Itineraries</h4>
+
+                <div class="row row-cols-1 row-cols-md-2 g-4">
+                    <div class="col" th:each="t : ${trips}">
+                        <div class="card shadow-sm h-100 trip-card">
+                            <div class="card-body d-flex flex-column p-4">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h4 class="card-title fw-bold mb-0 text-truncate">
+                                        <a th:href="@{/trip(id=${t.id})}" class="trip-link" th:text="${t.name}">Trip
+                                            Name</a>
+                                    </h4>
+                                    <form th:action="@{/deleteTrip}" method="post"
+                                        onsubmit="return confirm('Delete this trip?')">
+                                        <input type="hidden" name="id" th:value="${t.id}">
+                                        <button type="submit" class="btn-close btn-close-white" aria-label="Delete"
+                                            title="Delete Trip"></button>
+                                    </form>
+                                </div>
+                                <p class="text-muted mb-4 fs-6">
+                                    📍 <span th:text="${t.location}">Location</span>
+                                </p>
+                                <div
+                                    class="mt-auto d-flex justify-content-between align-items-center pt-3 border-top border-secondary border-opacity-25">
+                                    <div>
+                                        <span class="d-block text-muted small fw-bold"
+                                            style="font-size: 0.75rem;">BUDGET</span>
+                                        <span
+                                            class="badge bg-success bg-opacity-25 text-light border border-success border-opacity-50 px-3 py-2 fs-6 rounded-pill">
+                                            ₹<span th:text="${t.budget}"></span>
+                                        </span>
+                                    </div>
+                                    <a th:href="@{/trip(id=${t.id})}"
+                                        class="btn btn-outline-light rounded-pill px-4 fw-bold shadow-sm"
+                                        style="border-color: #8b5cf6; color: #a78bfa;">Open ➔</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:if="${#lists.isEmpty(trips)}" class="text-center py-5 rounded-4 mt-4 card"
+                    style="background: rgba(0,0,0,0.2);">
+                    <span class="display-1 d-block mb-3 opacity-50">🧳</span>
+                    <h5 class="fw-bold text-light">No trips added yet</h5>
+                    <p class="text-muted">Use the form on the left to start planning!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
